@@ -1,4 +1,5 @@
 from typing import Optional
+
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -40,18 +41,36 @@ def _keyword_prefilter(question: str) -> Optional[bool]:
     return None
 
 
-def _llm_classify(question: str, classifier_llm: ChatGoogleGenerativeAI) -> bool:
+def _llm_classify(
+    question: str,
+    classifier_llm: ChatGoogleGenerativeAI,
+    fallback_llm: Optional[ChatGoogleGenerativeAI] = None,
+) -> bool:
     """LLM-based classification for ambiguous inputs. Returns True if banking."""
     prompt = PromptTemplate(
         input_variables=["question"],
         template=DOMAIN_GUARD_PROMPT,
     )
     chain = prompt | classifier_llm
-    result = chain.invoke({"question": question})
+    try:
+        result = chain.invoke({"question": question})
+    except Exception as exc:
+        if fallback_llm is None:
+            raise
+        message = str(exc).lower()
+        if "quota" in message or "limit" in message or "resource exhausted" in message:
+            fallback_chain = prompt | fallback_llm
+            result = fallback_chain.invoke({"question": question})
+        else:
+            raise
     return "BANKING" in result.content.strip().upper()
 
 
-def is_banking_question(question: str, classifier_llm: ChatGoogleGenerativeAI) -> bool:
+def is_banking_question(
+    question: str,
+    classifier_llm: ChatGoogleGenerativeAI,
+    fallback_llm: Optional[ChatGoogleGenerativeAI] = None,
+) -> bool:
     prefilter = _keyword_prefilter(question)
 
     if prefilter is True:
@@ -59,4 +78,4 @@ def is_banking_question(question: str, classifier_llm: ChatGoogleGenerativeAI) -
     if prefilter is False:
         return False
 
-    return _llm_classify(question, classifier_llm)
+    return _llm_classify(question, classifier_llm, fallback_llm)
