@@ -5,12 +5,27 @@ from langchain_groq import ChatGroq
 def build_answer_llm(gemini_api_key: str = "", groq_api_key: str = ""):
     """
     Primary LLM — generates banking answers.
-    Uses Gemini 1.5 Flash if GOOGLE_API_KEY is set,
+    Uses Gemini 2.5 Flash if GOOGLE_API_KEY is set,
     falls back to Groq (llama-3.3-70b) if only GROQ_API_KEY is set.
     """
     if gemini_api_key:
+        primary_llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            google_api_key=gemini_api_key,
+            temperature=0.3,
+            convert_system_message_to_human=True,
+        )
+
+        if groq_api_key:
+            fallback_llm = ChatGroq(
+                model="llama-3.3-70b-versatile",
+                groq_api_key=groq_api_key,
+                temperature=0.3,
+            )
+            return primary_llm.with_fallbacks([fallback_llm])
+
         return ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             google_api_key=gemini_api_key,
             temperature=0.3,
             convert_system_message_to_human=True,
@@ -35,11 +50,26 @@ def build_classifier_llm(gemini_api_key: str = "", groq_api_key: str = ""):
     """
     Classifier LLM — used only for domain guard (Layer 2).
     Zero temperature for deterministic BANKING / NOT_BANKING output.
-    Falls back to Groq if Gemini key is absent.
+    Falls back to Groq if Gemini key is absent or fails at runtime.
     """
     if gemini_api_key:
+        primary_llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            google_api_key=gemini_api_key,
+            temperature=0.0,
+            convert_system_message_to_human=True,
+        )
+
+        if groq_api_key:
+            fallback_llm = ChatGroq(
+                model="llama-3.3-70b-versatile",
+                groq_api_key=groq_api_key,
+                temperature=0.0,
+            )
+            return primary_llm.with_fallbacks([fallback_llm])
+
         return ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             google_api_key=gemini_api_key,
             temperature=0.0,
             convert_system_message_to_human=True,
