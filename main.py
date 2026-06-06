@@ -8,7 +8,7 @@ DIVIDER = "=" * 55
 def print_banner():
     print(DIVIDER)
     print("  BankBot — Two-Agent Banking Assistant")
-    print("  LangChain + Gemini 1.5 Flash / Groq (fallback)")
+    print("  LangChain + Gemini 2.5 Flash / Groq (fallback)")
     print(DIVIDER)
 
 
