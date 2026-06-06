@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-from agents import BankingAgent
+from Agents.banking_agent import BankingAgent
 from components.refusal import get_refusal
 
 
