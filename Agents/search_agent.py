@@ -1,22 +1,19 @@
+from langchain_core.prompts import PromptTemplate
 from llm.bankbot import build_answer_llm
-from tools.search_tool import SearchTool
+from tools.google_search_tool import google_search
 
-
-SEARCH_AGENT_PROMPT = """
+SEARCH_SUMMARY_PROMPT = PromptTemplate.from_template(
+    """
 You are BankBot's Real-Time Banking Information Specialist.
 
 Your responsibility is to provide accurate and up-to-date banking information
 using the search results supplied to you.
 
-You specialize in:
+User Question:
+{question}
 
-- Current home loan, personal loan, education loan, and car loan rates
-- Current fixed deposit (FD) and recurring deposit (RD) rates
-- RBI repo rate, reverse repo rate, CRR, SLR, and monetary policy updates
-- Current banking regulations and circulars
-- Bank-specific schemes and offers
-- Recent banking news and announcements
-- Banking products and services that require real-time information
+Search Results:
+{results}
 
 IMPORTANT RULES:
 
@@ -26,69 +23,67 @@ IMPORTANT RULES:
    clearly mention that.
 4. Summarize information clearly and professionally.
 5. Mention the relevant bank name whenever applicable.
-6. Mention source references whenever available.
-7. State that banking rates and policies may change over time
-   and users should verify information with the official bank website.
+6. Mention sources whenever available.
+7. If information cannot be verified through search results,
+   clearly state that.
+8. Mention that banking rates and policies may change and users
+   should verify information through official bank websites.
 
-User Question:
-{question}
+Response Format:
 
-Search Results:
-{search_results}
+Answer:
+<your answer>
 
-Provide a clear, accurate, and concise response.
+Sources:
+<list sources used>
 """
-
+)
 
 class SearchAgent:
-    """
-    Handles live banking queries.
-
-    Examples:
-    - Current SBI home loan interest rate
-    - Latest RBI repo rate
-    - Current HDFC FD rates
-    - Recent banking policy updates
-    """
 
     def __init__(
         self,
-        gemini_api_key: str = "",
-        groq_api_key: str = ""
+        gemini_api_key="",
+        groq_api_key=""
     ):
-
         self.llm = build_answer_llm(
             gemini_api_key,
             groq_api_key
         )
 
-        self.search_tool = SearchTool()
-
     def search(self, query: str) -> str:
         """
-        Search for live banking information
-        and generate a user-friendly response.
+        Execute a live banking query.
         """
-
         try:
+            print(f"\n[SEARCH] Query: {query}")
 
-            search_results = self.search_tool.search(
-                query
+            raw_results = google_search.invoke(
+                {"query": query}
             )
 
-            prompt = SEARCH_AGENT_PROMPT.format(
-                question=query,
-                search_results=search_results
+            if (
+                not raw_results
+                or raw_results == "No search results found."
+            ):
+                return "No search results found."
+
+            print(f"[SEARCH] Retrieved {len(raw_results)} characters")
+
+            chain = (SEARCH_SUMMARY_PROMPT | self.llm)
+
+            response = chain.invoke(
+                {
+                    "question": query,
+                    "results": raw_results
+                }
             )
 
-            response = self.llm.invoke(
-                prompt
-            )
-
-            return response.content.strip()
+            if hasattr(response, "content"):
+                return response.content.strip()
+            return str(response).strip()
 
         except Exception as e:
 
-            return (
-                f"Search agent error: {str(e)}"
-            )
+            print( f"[SEARCH ERROR] {str(e)}" )
+            return ( f"Search agent error: {str(e)}")
