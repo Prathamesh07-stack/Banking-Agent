@@ -11,6 +11,9 @@ The system intelligently routes queries between a BankingAgent for general banki
 ![High Level Architecture](./High_Level_Architecture_diagram.png)
 
 ---
+
+
+
 # Features
 
 * Banking-only assistant
@@ -18,9 +21,11 @@ The system intelligently routes queries between a BankingAgent for general banki
 * Static banking knowledge support
 * Real-time banking information lookup
 * Router-based multi-agent architecture
+* Official bank website crawling
+* Bank-specific link ranking
+* Content extraction and parsing
 * Gemini 2.5 Flash support
 * Automatic Groq fallback
-* Tavily-powered live search
 * Conversation history support
 * Command-line interface
 
@@ -54,7 +59,7 @@ Examples:
 * Recent RBI announcements
 * Latest banking regulations
 
-These questions use Tavily Search to fetch live information before generating a response.
+These questions use a custom search pipeline that discovers official bank websites, ranks relevant banking pages, crawls content, and generates responses using LLMs.
 
 ---
 
@@ -64,7 +69,9 @@ These questions use Tavily Search to fetch live information before generating a 
 * LangChain
 * Google Gemini 2.5 Flash
 * Groq (Fallback LLM)
-* Tavily Search
+* Requests
+* BeautifulSoup
+* Playwright
 * dotenv
 
 ---
@@ -76,7 +83,6 @@ These questions use Tavily Search to fetch live information before generating a 
 
   * GOOGLE_API_KEY
   * OR GROQ_API_KEY
-* TAVILY_API_KEY (for live search functionality)
 
 ---
 
@@ -115,7 +121,6 @@ Create a `.env` file in the project root:
 ```ini
 GOOGLE_API_KEY=your_google_api_key
 GROQ_API_KEY=your_groq_api_key
-TAVILY_API_KEY=your_tavily_api_key
 ```
 
 Notes:
@@ -123,7 +128,6 @@ Notes:
 * At least one LLM key must be configured.
 * Gemini is used as the primary LLM.
 * Groq automatically acts as a fallback if Gemini fails.
-* Tavily is required for live search queries.
 
 ---
 
@@ -204,6 +208,16 @@ Run SearchAgent smoke test:
 python -m tests.search_agent_test
 ```
 
+---
+
+# Known Limitations
+
+* Some bank websites employ anti-bot or access-protection mechanisms that may prevent automated retrieval of publicly available information.
+* Certain banks may require explicit website mappings if their official domains cannot be reliably discovered.
+* Real-time information accuracy depends on accessibility of official bank websites at the time of the query.
+
+---
+
 # Future Enhancements
 
 * RAG-based banking document retrieval
@@ -212,6 +226,7 @@ python -m tests.search_agent_test
 * Banking FAQ knowledge base
 * Web API and UI integration
 * LangGraph orchestration for advanced workflows
-
-
-
+* Expand supported bank registry
+* Improved handling of anti-bot protected bank websites
+* Credit card and offer extraction support
+* Structured rate extraction from tables

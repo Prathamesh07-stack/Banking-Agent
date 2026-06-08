@@ -3,6 +3,7 @@ from tools.playwright_fetcher import (
     PlaywrightFetcher
 )
 
+
 class WebCrawler:
 
     def __init__(self):
@@ -26,7 +27,12 @@ class WebCrawler:
             "Error 1000",
             "DNS points to prohibited IP",
             "Access Denied",
-            "Attention Required"
+            "Attention Required",
+            "403 Forbidden",
+            "Forbidden",
+            "Request blocked",
+            "Access restricted",
+            "Bot detected"
         ]
 
     def _is_blocked_page(
@@ -36,11 +42,14 @@ class WebCrawler:
 
         if not html:
             return True
+
         html_lower = html.lower()
 
         for pattern in self.blocked_patterns:
+
             if pattern.lower() in html_lower:
                 return True
+
         return False
 
     def fetch_page(
@@ -49,27 +58,44 @@ class WebCrawler:
     ) -> str:
 
         try:
+
             response = requests.get(
                 url,
                 headers=self.headers,
                 timeout=20
             )
-            
+
             response.raise_for_status()
+
             html = response.text
 
-            if not self._is_blocked_page(html):
+            if not self._is_blocked_page(
+                html
+            ):
                 return html
 
-            print(f"[BLOCKED] Requests blocked: {url}")
+            print(
+                f"[BLOCKED] Requests blocked: {url}"
+            )
+
+            with open(
+                "blocked_requests.html",
+                "w",
+                encoding="utf-8"
+            ) as f:
+                f.write(html)
 
         except Exception as e:
 
-            print(f"[REQUESTS FAILED] {url}")
+            print(
+                f"[REQUESTS FAILED] {url}"
+            )
 
             print(e)
 
-        print("[FALLBACK] Using Playwright")
+        print(
+            "[FALLBACK] Using Playwright"
+        )
 
         html = (
             self.playwright.fetch_page(
@@ -77,8 +103,21 @@ class WebCrawler:
             )
         )
 
-        if self._is_blocked_page(html):
-            print(f"[BLOCKED] Playwright blocked: {url}")
+        if self._is_blocked_page(
+            html
+        ):
+
+            print(
+                f"[BLOCKED] Playwright blocked: {url}"
+            )
+
+            with open(
+                "blocked_playwright.html",
+                "w",
+                encoding="utf-8"
+            ) as f:
+                f.write(html)
+
             return ""
+
         return html
-    
