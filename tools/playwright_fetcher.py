@@ -25,10 +25,10 @@ class PlaywrightFetcher:
 
                 page.goto(
                     url,
-                    wait_until="networkidle",
-                    timeout=30000
+                    wait_until="domcontentloaded",
+                    timeout=45000
                 )
-                page.wait_for_timeout(5000)
+                page.wait_for_timeout(2000)
 
                 html = page.content()
                 browser.close()
