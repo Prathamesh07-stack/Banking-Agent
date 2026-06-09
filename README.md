@@ -1,8 +1,10 @@
 # BankAgent
 
-BankAgent is a command-line banking assistant built using LangChain and Large Language Models (LLMs). It uses a two-agent architecture to answer banking-related questions while strictly refusing out-of-domain requests.
+BankAgent is a banking assistant built using LangChain, Large Language Models (LLMs), FastAPI, and React. It uses a two-agent architecture to answer banking-related questions while strictly refusing out-of-domain requests.
 
 The system intelligently routes queries between a BankingAgent for general banking knowledge and a SearchAgent for real-time banking information.
+
+The application supports both a command-line interface and a web-based chat interface.
 
 ---
 
@@ -11,8 +13,6 @@ The system intelligently routes queries between a BankingAgent for general banki
 ![High Level Architecture](./High_Level_Architecture_diagram.png)
 
 ---
-
-
 
 # Features
 
@@ -28,6 +28,11 @@ The system intelligently routes queries between a BankingAgent for general banki
 * Automatic Groq fallback
 * Conversation history support
 * Command-line interface
+* FastAPI REST API
+* React-based web interface
+* Agent source identification
+* Dynamic loading indicators
+* Conversation reset support
 
 ---
 
@@ -66,6 +71,9 @@ These questions use a custom search pipeline that discovers official bank websit
 # Technology Stack
 
 * Python
+* FastAPI
+* React
+* Vite
 * LangChain
 * Google Gemini 2.5 Flash
 * Groq (Fallback LLM)
@@ -79,6 +87,7 @@ These questions use a custom search pipeline that discovers official bank websit
 # Requirements
 
 * Python 3.10+
+* Node.js 18+
 * One LLM API Key:
 
   * GOOGLE_API_KEY
@@ -108,8 +117,17 @@ source .venv/bin/activate
 
 ## Install Dependencies
 
+### Backend
+
 ```bash
 pip install -r requirements.txt
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
 ```
 
 ---
@@ -133,8 +151,39 @@ Notes:
 
 # Run the Application
 
+## Command-Line Interface
+
 ```bash
 python main.py
+```
+
+---
+
+## Web Application
+
+### Start Backend
+
+```bash
+uvicorn api:app --reload
+```
+
+### Start Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+Backend:
+
+```text
+http://localhost:8000
 ```
 
 ---
@@ -146,6 +195,36 @@ help    → Show available commands
 reset   → Clear conversation history
 exit    → Exit the application
 quit    → Exit the application
+```
+
+---
+
+# API Endpoints
+
+## Health Check
+
+```http
+GET /health
+```
+
+## Chat
+
+```http
+POST /chat
+```
+
+Request:
+
+```json
+{
+  "message": "What is EMI?"
+}
+```
+
+## Reset Conversation
+
+```http
+POST /reset
 ```
 
 ---
@@ -224,7 +303,6 @@ python -m tests.search_agent_test
 * Loan calculator tool integration
 * Multi-bank comparison agent
 * Banking FAQ knowledge base
-* Web API and UI integration
 * LangGraph orchestration for advanced workflows
 * Expand supported bank registry
 * Improved handling of anti-bot protected bank websites
