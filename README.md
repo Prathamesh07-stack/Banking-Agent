@@ -1,8 +1,8 @@
 # BankAgent
 
-BankAgent is a banking assistant built using LangChain, Large Language Models (LLMs), FastAPI, and React. It uses a two-agent architecture to answer banking-related questions while strictly refusing out-of-domain requests.
+BankAgent is a banking assistant built using LangGraph, LangChain, Large Language Models (LLMs), FastAPI, and React. It uses a graph-based multi-agent workflow to answer banking-related questions while strictly refusing out-of-domain requests.
 
-The system intelligently routes queries between a BankingAgent for general banking knowledge and a SearchAgent for real-time banking information.
+The system intelligently routes queries between a BankingAgent for general banking knowledge and a SearchAgent for real-time banking information using LangGraph state management and conditional routing.
 
 The application supports both a command-line interface and a web-based chat interface.
 
@@ -20,19 +20,19 @@ The application supports both a command-line interface and a web-based chat inte
 * Domain guard for query validation
 * Static banking knowledge support
 * Real-time banking information lookup
-* Router-based multi-agent architecture
+* LangGraph workflow orchestration
+* Conditional agent routing
+* Conversation memory using LangGraph MemorySaver
 * Official bank website crawling
 * Bank-specific link ranking
 * Content extraction and parsing
 * Gemini 2.5 Flash support
 * Automatic Groq fallback
-* Conversation history support
 * Command-line interface
 * FastAPI REST API
 * React-based web interface
 * Agent source identification
 * Dynamic loading indicators
-* Conversation reset support
 
 ---
 
@@ -74,6 +74,7 @@ These questions use a custom search pipeline that discovers official bank websit
 * FastAPI
 * React
 * Vite
+* LangGraph
 * LangChain
 * Google Gemini 2.5 Flash
 * Groq (Fallback LLM)
@@ -188,17 +189,6 @@ http://localhost:8000
 
 ---
 
-# Available Commands
-
-```text
-help    → Show available commands
-reset   → Clear conversation history
-exit    → Exit the application
-quit    → Exit the application
-```
-
----
-
 # API Endpoints
 
 ## Health Check
@@ -221,10 +211,13 @@ Request:
 }
 ```
 
-## Reset Conversation
+If session support is enabled:
 
-```http
-POST /reset
+```json
+{
+  "message": "What is EMI?",
+  "session_id": "default"
+}
 ```
 
 ---
@@ -294,6 +287,7 @@ python -m tests.search_agent_test
 * Some bank websites employ anti-bot or access-protection mechanisms that may prevent automated retrieval of publicly available information.
 * Certain banks may require explicit website mappings if their official domains cannot be reliably discovered.
 * Real-time information accuracy depends on accessibility of official bank websites at the time of the query.
+* Memory persistence is currently in-memory and resets when the application restarts.
 
 ---
 
@@ -303,8 +297,9 @@ python -m tests.search_agent_test
 * Loan calculator tool integration
 * Multi-bank comparison agent
 * Banking FAQ knowledge base
-* LangGraph orchestration for advanced workflows
+* Persistent conversation memory storage
 * Expand supported bank registry
 * Improved handling of anti-bot protected bank websites
 * Credit card and offer extraction support
 * Structured rate extraction from tables
+* Additional LangGraph workflow nodes and tools
