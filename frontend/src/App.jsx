@@ -80,6 +80,17 @@ export default function App() {
   const bottomRef                 = useRef(null)
   const textareaRef               = useRef(null)
 
+  const [sessionId] = useState(() => {
+  let id = localStorage.getItem("session_id")
+
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem("session_id", id)
+  }
+
+  return id
+})
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, loading])
@@ -119,7 +130,7 @@ export default function App() {
       const res = await fetch(`${API}/chat`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ message: trimmed }),
+        body:    JSON.stringify({ message: trimmed, session_id: sessionId }),
       })
       if (!res.ok) throw new Error(`Server error ${res.status}`)
       const data = await res.json()
@@ -143,7 +154,7 @@ export default function App() {
       setLoading(false)
       setTimeout(() => textareaRef.current?.focus(), 50)
     }
-  }, [input, loading])
+  }, [input, loading, sessionId])
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -152,11 +163,14 @@ export default function App() {
     }
   }
 
-  const handleReset = async () => {
-    try { await fetch(`${API}/reset`, { method: "POST" }) } catch (_) {}
-    setMessages([])
-    setError("")
-  }
+const handleReset = () => {
+  const newSessionId = crypto.randomUUID()
+  localStorage.setItem(
+    "session_id",
+    newSessionId
+  )
+  window.location.reload()
+}
 
   const isEmpty = messages.length === 0 && !loading
 

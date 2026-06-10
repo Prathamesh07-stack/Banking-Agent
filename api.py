@@ -45,7 +45,6 @@ def health():
         "status": "ok"
     }
 
-
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
 
